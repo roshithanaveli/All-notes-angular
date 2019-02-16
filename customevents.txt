@@ -1,0 +1,112 @@
+Steps to Define the CustomEvent handling
+-----------------------------------------
+1. Create an event class, CustomEvent by extending ApplicationEvent. This class must define a default constructor which should inherit constructor from ApplicationEvent class.
+
+
+2. Create a class which implements ApplicationEventPublisherAware 
+   and overrides the methods 
+   a. public void setApplicationEventPublisher(ApplicationEventPublisher publisher)
+   b. public void publish()
+
+
+3. A published event can be handled in a class, let us say EventClassHandler which implements ApplicationListener interface and implements onApplicationEvent method for the custom event.
+
+4. create the cofiguration file.
+
+5. Write the main program and execute.
+
+import org.springframework.context.ApplicationEvent;
+
+public class CustomEvent extends ApplicationEvent{
+   public CustomEvent(Object source) {
+      super(source);
+   }
+   public String toString(){
+      return "My Custom Event";
+   }
+}
+
+import org.springframework.context.ApplicationEventPublisher;
+import org.springframework.context.ApplicationEventPublisherAware;
+
+public class CustomEventPublisher implements ApplicationEventPublisherAware {
+
+  private ApplicationEventPublisher publisher;
+   
+   public void setApplicationEventPublisher (ApplicationEventPublisher publisher) {
+      this.publisher = publisher;
+   }
+   public void publish() {
+      CustomEvent ce = new CustomEvent(this);  
+        publisher.publishEvent(ce);
+   }
+}
+
+
+import org.springframework.context.ApplicationListener;
+public class CustomEventHandler implements ApplicationListener<CustomEvent> {
+   public void onApplicationEvent(CustomEvent event) {
+      System.out.println(event.toString());
+   }
+}
+
+import org.springframework.context.ConfigurableApplicationContext;
+import org.springframework.context.support.ClassPathXmlApplicationContext;
+
+public class MainApp {
+   public static void main(String[] args) {
+      ConfigurableApplicationContext context = 
+         new ClassPathXmlApplicationContext("Beans.xml");
+	  
+      CustomEventPublisher cvp = 
+         (CustomEventPublisher) context.getBean("customEventPublisher");
+      
+         cvp.publish();
+   }
+}
+
+<?xml version = "1.0" encoding = "UTF-8"?>
+<beans xmlns = "http://www.springframework.org/schema/beans"
+   xmlns:xsi = "http://www.w3.org/2001/XMLSchema-instance"
+   xsi:schemaLocation = "http://www.springframework.org/schema/beans
+   http://www.springframework.org/schema/beans/spring-beans-3.0.xsd">
+
+   <bean id = "customEventHandler" class = "com.tutorialspoint.CustomEventHandler"/>
+   <bean id = "customEventPublisher" class = "com.tutorialspoint.CustomEventPublisher"/>
+</beans>
+
+
+
+1. create the event
+
+2. publish the event
+
+3. handle the event
+
+4. Test the Event
+
+
+
+	class Bank{
+
+			// checkBalance();  // 
+			// fundsTransfer();  //
+			// deposits();
+  
+	}
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
