@@ -1,0 +1,371 @@
+users:any[]=[
+{id:101,name:'praveen',city:'hyderabad',salary:2,dob:new Date('19/01/1979')},
+{id:102,name:'niranjan',city:'chennnai',salary:80000,dob:new Date('19/08/1980')},
+{id:103,name:'krishna',city:'kolkata',salary:75000,dob:new Date('14/01/2012')},
+{id:104,name:'kumar',city:'mumbai',salary:54000,dob:new Date('05/10/2001')},
+{id:105,name:'shamem',city:'delhi',salary:63000,dob:new Date('05/10/1986')},
+]
+
+
+app.component.ts
+-------------
+import { Component, OnInit } from '@angular/core';
+import { UsersService } from './services/users.service';
+@Component({
+  selector: 'app-root',
+  templateUrl: './app.component.html',
+  styleUrls: ['./app.component.css']
+})
+export class AppComponent implements OnInit{
+  title = 'servex';
+  constructor(private usersv:UsersService){
+
+  }
+  users:any[];
+      ngOnInit(){
+      this.users=this.usersv.getUsers();
+    }
+}
+
+
+app.module.ts
+-------------
+
+import { BrowserModule } from '@angular/platform-browser';
+import { NgModule } from '@angular/core';
+
+import { AppRoutingModule } from './app-routing.module';
+import { AppComponent } from './app.component';
+import { UsersService } from './services/users.service';
+import {HttpClientModule} from '@angular/common/http';
+
+@NgModule({
+  declarations: [
+    AppComponent
+  ],
+  imports: [
+    BrowserModule,
+    AppRoutingModule,
+    HttpClientModule
+  ],
+  providers: [UsersService],
+  bootstrap: [AppComponent]
+})
+export class AppModule { }
+
+
+app.component.html
+-------------------
+{{title}}
+
+
+<table>
+<tr>
+  <td>Id</td>
+  <td>Name</td>
+  <td>City</td>
+  <td>Salary</td>
+  </tr>
+<tr *ngFor="let user of users">
+  <td>{{user.id}}</td>
+  <td>{{user.name}}</td>
+  <td>{{user.city}}</td>
+  <td>{{user.salary}}</td>
+  </tr>
+</table> 
+
+<router-outlet></router-outlet>
+
+
+usersservice.ts
+---------------
+import { Injectable } from '@angular/core';
+
+@Injectable({
+  providedIn: 'root'
+})
+export class UsersService {
+
+  constructor() { }
+  getUsers(){
+    return [
+      {id:101,name:'praveen',city:'hyderabad',salary:2},
+      {id:102,name:'niranjan',city:'chennnai',salary:80000},
+      {id:103,name:'krishna',city:'kolkata',salary:75000},
+      {id:104,name:'kumar',city:'mumbai',salary:54000},
+      {id:105,name:'shamem',city:'delhi',salary:63000}
+      ];
+  }
+}
+
+Form Validation
+---------------
+Form State and Input State
+
+Forms can be created in two ways: reactive and template-driven, key differences are:
+
+ 			Reactive 					Template-driven
+			--------					----------------
+Setup (form model) 	More explicit, created in component class 	Less explicit, created by directives
+
+Data model 		Structured 					Unstructured
+
+Predictability 		Synchronous 					Asynchronous
+
+Form validation 	Functions 					Directives
+
+Mutability 		Immutable 					Mutable
+
+Scalability 		Low-level API access 				Abstraction on top of APIs
+
+Both reactive and template-driven forms share underlying building blocks.
+
+    FormControl tracks the value and validation status of an individual form control.
+
+    FormGroup tracks the same values and status for a collection of form controls.
+
+    FormArray tracks the same values and status for an array of form controls.
+
+    ControlValueAccessor creates a bridge between Angular FormControl instances and native DOM     	    elements.
+
+
+Angular is constantly updating the state of both the form and the input fields.
+
+Input fields have the following states:
+
+    $untouched The field has not been touched yet  
+    $touched The field has been touched
+    $pristine The field has not been modified yet
+    $dirty The field has been modified
+    $invalid The field content is not valid
+    $valid The field content is valid
+     required  
+
+They are all properties of the input field, and are either true or false.
+
+Forms have the following states:
+
+    $pristine No fields have been modified yet
+    $dirty One or more have been modified
+    $invalid The form content is not valid
+    $valid The form content is valid
+    $submitted The form is submitted
+
+They are all properties of the form, and are either true or false.
+
+
+
+
+User.ts in /app
+---------------
+
+export class User {
+    id: number;
+    email: string;
+    /*Both the passwords are in a single object*/
+    password: {
+        pwd: string;
+        confirmPwd: string;
+    };
+    gender: string;
+    terms: boolean;
+
+    constructor(values: Object = {}) {
+        /*Constructor initialization*/
+        Object.assign(this, values);
+    }
+}
+
+appmodule.ts
+------------
+import { BrowserModule } from '@angular/platform-browser';
+import { NgModule } from '@angular/core';
+
+import { AppComponent } from './app.component';
+import {FormsModule} from '@angular/forms';
+import { TemplatedrivenformComponent } from './templatedrivenform/templatedrivenform.component';
+
+
+@NgModule({
+  declarations: [
+    AppComponent,
+    TemplatedrivenformComponent
+  ],
+  imports: [
+    BrowserModule,
+      FormsModule
+  ],
+  providers: [],
+  bootstrap: [AppComponent]
+})
+export class AppModule { }
+
+app.component.ts
+---------------
+import { Component } from '@angular/core';
+
+@Component({
+  selector: 'app-root',
+  templateUrl: './app.component.html',
+  styleUrls: ['./app.component.css']
+})
+export class AppComponent {
+  title = 'app';
+}
+
+app.component.html
+------------------
+<app-templatedrivenform></app-templatedrivenform>
+
+app-routing.module.ts
+---------------------
+import { NgModule } from '@angular/core';
+import { Routes, RouterModule } from '@angular/router';
+
+const routes: Routes = [];
+
+@NgModule({
+  imports: [RouterModule.forRoot(routes)],
+  exports: [RouterModule]
+})
+export class AppRoutingModule { }
+
+templatedrivenform.component.ts in /app/templatedrivenform/
+-------------------------------------------------------------
+import { Component, OnInit } from '@angular/core';
+import {User} from '../user';
+
+@Component({
+  selector: 'app-templatedrivenform',
+  templateUrl: './templatedrivenform.component.html',
+  styleUrls: ['./templatedrivenform.component.css']
+})
+export class TemplatedrivenformComponent implements OnInit {
+  user: User;
+  gender: any[];
+
+  constructor() {
+      this.gender = ['Male', 'Female', 'Others'];
+      this.user = new User({
+          email: '', password: { pwd: '' , confirm_pwd: ''},
+          gender: this.gender[0], terms: false});
+  }
+
+  ngOnInit() {
+  }
+    onFormSubmit({ value, valid}: { value: User, valid: boolean }) {
+        this.user = value;
+        console.log( this.user);
+        console.log('valid: ' + valid);
+    }
+}
+
+templatedrivenform.component.html
+---------------------------------
+<h1>Template Driven Forms</h1>
+<div class="row ">
+  <div class= "col-sm-7 custom-row jumbotron">
+
+    <form novalidate (ngSubmit)="onFormSubmit(signupForm)" #signupForm="ngForm">
+      <fieldset>
+        <legend>SignUp</legend>
+
+        <!-- Email input block -->
+        <div class="form-group">
+          <label for="inputEmail" class="col-lg-2
+		      control-label">Email</label>
+          <div class="col-lg-7">
+            <input type="text" class = "form-control" [ngModel] = "user.email" name="email" #email = "ngModel" id="inputEmail" placeholder="Email" pattern="[a-z0-9._%+-]+@[a-z0-9.-]+\.[a-z]{2,3}$" required>
+          </div>
+          <!-- Email error block -->
+          <div *ngIf="email.invalid && ( email.touched)" class="col-sm-3 text-danger">
+            <div *ngIf = "email.errors?.required">
+              Email field can't be blank
+            </div>
+            <div *ngIf = "email.errors?.pattern && email.touched">
+              The email id doesn't seem right
+            </div>
+          </div>
+        </div>
+        <!-- Password block -->
+        <div ngModelGroup="password" #userPassword="ngModelGroup" >
+          <div class="form-group ">
+            <label for="inputPassword" class="col-lg-2 	control-label">Password</label>
+            <div class="col-lg-7">
+              <input type="password" class="form-control" #pwd="ngModel" name="pwd" id="inputPassword" placeholder="Password" minlength ="8" required>
+            </div>
+          </div>
+          <div class="form-group">
+            <label for="confirmPassword" class="col-lg-2 control-label" >Confirm Password</label>
+            <div class="col-lg-7">
+              <input type="password" class="form-control" ngModel name="confirmPwd" id="confirmPassword" placeholder="Confirm Password">
+            </div>
+          </div>
+
+          <!-- Password error block -->
+          <div *ngIf="(userPassword.invalid|| userPassword.value?.pwd != userPassword.value?.confirmPwd) && (userPassword.touched)"
+               class="col-sm-3 text-danger">
+
+            <div *ngIf = "userPassword.invalid; else nomatch">
+              Password needs to be more than 8 characters
+            </div>
+            <ng-template #nomatch >
+              Passwords don't match
+            </ng-template>
+
+          </div>
+        </div>
+
+        <br>
+        <!-- Select Gender block -->
+        <div class="form-group">
+          <label for="select" class="col-lg-2">Gender</label>
+          <div class="col-lg-7">
+            <select id="select" class="form-control"
+                    [ngModel] = "user.gender" name = "gender"
+                    required>
+
+              <option *ngFor = "let g of gender"
+                      [value] = "g"> {{g}}
+              </option>
+            </select>
+          </div>
+        </div>
+
+        <!-- Terms checkbox block -->
+
+        <div class="form-group checkbox">
+          <div class="col-lg-6 ">
+            <input type="checkbox"
+                   ngModel name = "terms"
+                   #terms = "ngModel"
+                   required> Confirm that you've read the Terms and Condition
+          </div>
+
+
+          <!-- Terms checkbox error block -->
+          <div *ngIf="(terms.invalid && terms.touched)"
+               class="col-lg-4 text-danger">
+            You need to check this box to continue
+          </div>
+        </div>
+
+        <!-- Buttons block -->
+        <div class="form-group ">
+          <div class="col-lg-10 col-lg-offset-2">
+            <button type="reset" class="btn btn-default">Cancel</button>
+            <button type="submit" class="btn btn-success"
+                    [disabled]="!signupForm.form.valid"> Submit
+            </button>
+          </div>
+        </div>
+      </fieldset>
+    </form>
+  </div>
+</div>
+<pre>
+  {{user | json}}
+</pre>
+
+
+

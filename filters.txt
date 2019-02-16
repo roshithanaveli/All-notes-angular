@@ -1,0 +1,8 @@
+Filters
+-------
+
+1. uppercase , lowercase
+
+2.ng-repeat orderby
+
+3. 

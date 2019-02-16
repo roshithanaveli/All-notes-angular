@@ -1,0 +1,918 @@
+Steps to create a CRUD Application
+-----------------------------------
+1. create a simple maven project
+
+2. create the following packages in src/main/java
+
+	2.1 com.usecase.config
+	2.2 com.usecase.controller
+	2.3 com.usecase.dao
+	2.4 com.usecase.model
+	2.5 com.usecase.service
+
+3. create the properties file in src/main/resources
+	3.1 db.properties.
+
+4. In pom.xml write the following dependencies
+
+<project xmlns="http://maven.apache.org/POM/4.0.0" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
+  xsi:schemaLocation="http://maven.apache.org/POM/4.0.0 http://maven.apache.org/xsd/maven-4.0.0.xsd">
+  <modelVersion>4.0.0</modelVersion>
+  <groupId>com.bushansirgur.spring</groupId>
+  <artifactId>spring-mvc-restfull-crud</artifactId>
+  <version>0.0.1-SNAPSHOT</version>
+  <packaging>war</packaging>
+  <properties>
+    <failOnMissingWebXml>false</failOnMissingWebXml>
+  </properties>
+
+  <dependencies>
+    <!-- Spring MVC Dependency -->
+    <dependency>
+      <groupId>org.springframework</groupId>
+      <artifactId>spring-webmvc</artifactId>
+      <version>4.3.10.RELEASE</version>
+    </dependency>
+    <!-- Spring ORM -->
+    <dependency>
+      <groupId>org.springframework</groupId>
+      <artifactId>spring-orm</artifactId>
+      <version>4.3.10.RELEASE</version>
+    </dependency>
+    <!-- Hibernate ORM -->
+    <dependency>
+      <groupId>org.hibernate</groupId>
+      <artifactId>hibernate-core</artifactId>
+      <version>5.2.11.Final</version>
+    </dependency>
+    <!-- Hibernate-C3P0 Integration -->
+    <dependency>
+      <groupId>org.hibernate</groupId>
+      <artifactId>hibernate-c3p0</artifactId>
+      <version>5.2.11.Final</version>
+    </dependency>
+    <!-- c3p0 -->
+    <dependency>
+      <groupId>com.mchange</groupId>
+      <artifactId>c3p0</artifactId>
+      <version>0.9.5.2</version>
+    </dependency>
+    <!-- Mysql Connector -->
+    <dependency>
+      <groupId>mysql</groupId>
+      <artifactId>mysql-connector-java</artifactId>
+      <version>6.0.5</version>
+    </dependency>
+    <!-- Jackson API for JSON -->
+    <dependency>
+      <groupId>com.fasterxml.jackson.core</groupId>
+      <artifactId>jackson-databind</artifactId>
+      <version>2.8.7</version>
+    </dependency>
+    <!-- Servlet Dependency -->
+    <dependency>
+      <groupId>javax.servlet</groupId>
+      <artifactId>javax.servlet-api</artifactId>
+      <version>3.1.0</version>
+      <scope>provided</scope>
+    </dependency>
+  </dependencies>
+  <build>
+    <plugins>
+      <plugin>
+        <artifactId>maven-compiler-plugin</artifactId>
+        <version>3.5.1</version>
+        <configuration>
+          <source>1.8</source>
+          <target>1.8</target>
+        </configuration>
+      </plugin>
+
+      <!-- Embedded Apache Tomcat required for testing web application -->
+      <plugin>
+        <groupId>org.apache.tomcat.maven</groupId>
+        <artifactId>tomcat7-maven-plugin</artifactId>
+        <version>2.2</version>
+        <configuration>
+          <path>/</path>
+        </configuration>
+      </plugin>
+    </plugins>
+  </build>
+</project>
+
+5. write the following properties in db.properties
+
+# MySQL properties
+mysql.driver=com.mysql.cj.jdbc.Driver
+mysql.url=jdbc:mysql://localhost:3306/bookdb
+mysql.user=root
+mysql.password=
+
+# Hibernate properties
+hibernate.show_sql=true
+hibernate.hbm2ddl.auto=update
+
+#C3P0 properties
+hibernate.c3p0.min_size=5
+hibernate.c3p0.max_size=20
+hibernate.c3p0.acquire_increment=1
+hibernate.c3p0.timeout=1800
+hibernate.c3p0.max_statements=150
+
+6. Inside the config package, create the following classes:
+	6.1 AppConfig.java
+	6.2 MyWebAppInitializer.java
+	6.3 WebConfig.java
+
+6.1 AppConfig.java
+---------------
+package com.usecase.config;
+
+import java.util.Properties;
+
+import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.context.annotation.Bean;
+import org.springframework.context.annotation.ComponentScan;
+import org.springframework.context.annotation.ComponentScans;
+import org.springframework.context.annotation.Configuration;
+import org.springframework.context.annotation.PropertySource;
+import org.springframework.core.env.Environment;
+import org.springframework.orm.hibernate5.HibernateTransactionManager;
+import org.springframework.orm.hibernate5.LocalSessionFactoryBean;
+import org.springframework.transaction.annotation.EnableTransactionManagement;
+import static org.hibernate.cfg.Environment.*;
+
+@Configuration
+@PropertySource("classpath:db.properties")
+@EnableTransactionManagement
+@ComponentScans
+(
+
+value = { @ComponentScan("com.usecase.dao"),
+      	  @ComponentScan("com.usecase.service"),
+	 }
+)
+public class AppConfig {
+
+   @Autowired
+   private Environment env;
+
+   @Bean
+   public LocalSessionFactoryBean getSessionFactory() {
+      LocalSessionFactoryBean factoryBean = new LocalSessionFactoryBean();
+
+      Properties props = new Properties();
+      // Setting JDBC properties
+      props.put(DRIVER, env.getProperty("mysql.driver"));
+      props.put(URL, env.getProperty("mysql.url"));
+      props.put(USER, env.getProperty("mysql.user"));
+      props.put(PASS, env.getProperty("mysql.password"));
+
+      // Setting Hibernate properties
+      props.put(SHOW_SQL, env.getProperty("hibernate.show_sql"));
+      props.put(HBM2DDL_AUTO, env.getProperty("hibernate.hbm2ddl.auto"));
+
+      // Setting C3P0 properties
+      props.put(C3P0_MIN_SIZE, env.getProperty("hibernate.c3p0.min_size"));
+      props.put(C3P0_MAX_SIZE, env.getProperty("hibernate.c3p0.max_size"));
+      props.put(C3P0_ACQUIRE_INCREMENT, 
+            env.getProperty("hibernate.c3p0.acquire_increment"));
+      props.put(C3P0_TIMEOUT, env.getProperty("hibernate.c3p0.timeout"));
+      props.put(C3P0_MAX_STATEMENTS, env.getProperty("hibernate.c3p0.max_statements"));
+
+      factoryBean.setHibernateProperties(props);
+      factoryBean.setPackagesToScan("com.usecase.model");
+
+      return factoryBean;
+   }
+
+   @Bean
+   public HibernateTransactionManager getTransactionManager() {
+      HibernateTransactionManager transactionManager = new HibernateTransactionManager();
+      transactionManager.setSessionFactory(getSessionFactory().getObject());
+      return transactionManager;
+   }
+}
+
+6.2 WebConfig.java
+--------------
+package com.usecase.config;
+
+import org.springframework.context.annotation.ComponentScan;
+import org.springframework.context.annotation.Configuration;
+import org.springframework.web.servlet.config.annotation.CorsRegistry;
+import org.springframework.web.servlet.config.annotation.EnableWebMvc;
+import org.springframework.web.servlet.config.annotation.WebMvcConfigurerAdapter;
+
+@Configuration
+@EnableWebMvc
+@ComponentScan(basePackages = { "com.usecase.controller" })
+public class WebConfig extends WebMvcConfigurerAdapter {
+	
+	@Override
+	public void addCorsMappings(CorsRegistry registry) {
+		registry.addMapping("/**");
+	}
+	
+}
+
+
+6.3 MyWebAppInitializer.java
+----------------------------
+package com.usecase.config;
+
+import org.springframework.web.servlet.support.AbstractAnnotationConfigDispatcherServletInitializer;
+
+import com.usecase.config.WebConfig;
+
+public class MyWebAppInitializer extends AbstractAnnotationConfigDispatcherServletInitializer {
+
+   @Override
+   protected Class<?>[] getRootConfigClasses() {
+      return new Class[] { AppConfig.class };
+   }
+
+   @Override
+   protected Class<?>[] getServletConfigClasses() {
+      return new Class[] { WebConfig.class };
+   }
+
+   @Override
+   protected String[] getServletMappings() {
+      return new String[] { "/" };
+   }
+}
+7. Create a model class Book.java in src/java/main/usecase/model package
+
+7.1 Book.java
+--------------
+package com.usecase.model;
+
+import javax.persistence.Entity;
+import javax.persistence.GeneratedValue;
+import javax.persistence.GenerationType;
+import javax.persistence.Id;
+
+@Entity(name = "Book")
+public class Book {
+
+   @Id
+   @GeneratedValue(strategy = GenerationType.IDENTITY)
+   private Long id;
+   private String title;
+   private String author;
+
+   public Long getId() {
+      return id;
+   }
+
+   public void setId(Long id) {
+      this.id = id;
+   }
+
+   public String getTitle() {
+      return title;
+   }
+
+   public void setTitle(String title) {
+      this.title = title;
+   }
+
+   public String getAuthor() {
+      return author;
+   }
+
+   public void setAuthor(String author) {
+      this.author = author;
+   }
+
+	@Override
+	public String toString() {
+		return "Book [id=" + id + ", title=" + title + ", author=" + author + "]";
+	}
+   
+   
+}
+
+8. Create a dao interface  and implemtation classes in src/main/java/usecase/dao package
+8.1 BookDao.java
+-----------------
+package com.usecase.dao;
+
+import java.util.List;
+
+import com.usecase.model.Book;
+
+
+public interface BookDao {
+
+   long save(Book book);
+
+   Book get(long id);
+
+   List<Book> list();
+
+   void update(long id, Book book);
+
+   void delete(long id);
+
+}
+
+8.2 create the implement class 
+
+BookDaoImpl.java
+----------------
+package com.usecase.dao;
+
+import java.util.List;
+
+import javax.persistence.criteria.CriteriaBuilder;
+import javax.persistence.criteria.CriteriaQuery;
+import javax.persistence.criteria.Root;
+
+import org.hibernate.Session;
+import org.hibernate.SessionFactory;
+import org.hibernate.query.Query;
+import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.stereotype.Repository;
+
+import com.usecase.model.Book;
+
+
+@Repository
+public class BookDaoImp implements BookDao {
+
+	@Autowired
+	   private SessionFactory sessionFactory;
+
+	   @Override
+	   public long save(Book book) {
+	      sessionFactory.getCurrentSession().save(book);
+	      return book.getId();
+	   }
+
+	   @Override
+	   public Book get(long id) {
+	      return sessionFactory.getCurrentSession().get(Book.class, id);
+	   }
+
+	   @Override
+	   public List<Book> list() {
+	      Session session = sessionFactory.getCurrentSession();
+	      CriteriaBuilder cb = session.getCriteriaBuilder();
+	      CriteriaQuery<Book> cq = cb.createQuery(Book.class);
+	      Root<Book> root = cq.from(Book.class);
+	      cq.select(root);
+	      Query<Book> query = session.createQuery(cq);
+	      return query.getResultList();
+	   }
+
+	   @Override
+	   public void update(long id, Book book) {
+	      Session session = sessionFactory.getCurrentSession();
+	      Book book2 = session.byId(Book.class).load(id);
+	      book2.setTitle(book.getTitle());
+	      book2.setAuthor(book.getAuthor());
+	      session.flush();
+	   }
+
+	   @Override
+	   public void delete(long id) {
+	      Session session = sessionFactory.getCurrentSession();
+	      Book book = session.byId(Book.class).load(id);
+	      session.delete(book);
+	   }
+}
+
+
+9. create a service interface and implement in com.usecase.service package
+
+9.1 BookService.java
+---------------------
+
+package com.usecase.service;
+
+import java.util.List;
+
+import com.usecase.model.Book;
+
+public interface BookService {
+
+	long save(Book book);
+
+	Book get(long id);
+
+	List<Book> list();
+
+	void update(long id, Book book);
+
+	void delete(long id);
+}
+
+9.2 BookServiceImpl.java
+-------------------------
+
+package com.usecase.service;
+
+import java.util.List;
+
+import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.stereotype.Service;
+import org.springframework.transaction.annotation.Transactional;
+
+import com.usecase.dao.BookDao;
+import com.usecase.model.Book;
+
+
+@Service
+@Transactional(readOnly = true)
+public class BookServiceImp implements BookService {
+
+   @Autowired
+   private BookDao bookDao;
+
+   @Transactional
+   @Override
+   public long save(Book book) {
+      return bookDao.save(book);
+   }
+
+   @Override
+   public Book get(long id) {
+      return bookDao.get(id);
+   }
+
+   @Override
+   public List<Book> list() {
+      return bookDao.list();
+   }
+
+   @Transactional
+   @Override
+   public void update(long id, Book book) {
+      bookDao.update(id, book);
+   }
+
+   @Transactional
+   @Override
+   public void delete(long id) {
+      bookDao.delete(id);
+   }
+}
+
+10. create the controller class in com.usecase.controller
+
+BookController.java
+-------------------
+
+package com.usecase.controller;
+
+import java.util.List;
+
+import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.http.ResponseEntity;
+import org.springframework.web.bind.annotation.CrossOrigin;
+import org.springframework.web.bind.annotation.DeleteMapping;
+import org.springframework.web.bind.annotation.GetMapping;
+import org.springframework.web.bind.annotation.PathVariable;
+import org.springframework.web.bind.annotation.PostMapping;
+import org.springframework.web.bind.annotation.PutMapping;
+import org.springframework.web.bind.annotation.RequestBody;
+import org.springframework.web.bind.annotation.RestController;
+
+import com.usecase.model.Book;
+import com.usecase.service.BookService;
+
+
+@CrossOrigin(origins = "*")
+@RestController
+public class BookController {
+
+   @Autowired
+   private BookService bookService;
+
+   /*---Add new book---*/
+   @PostMapping("/book")
+   public ResponseEntity<?> save(@RequestBody Book book) {
+	  System.out.println("the json value of book is :::::: "+book);
+      long id = bookService.save(book);
+      return ResponseEntity.ok().body("New Book has been saved with ID:" + id);
+   }
+   
+   /*---Get a book by id---*/
+   @GetMapping("/book/{id}")
+   public ResponseEntity<Book> get(@PathVariable("id") long id) {
+      Book book = bookService.get(id);
+      return ResponseEntity.ok().body(book);
+   }
+
+   /*---get all books---*/
+   @GetMapping("/book")
+   public ResponseEntity<List<Book>> list() {
+      List<Book> books = bookService.list();
+      return ResponseEntity.ok().body(books);
+   }
+
+   /*---Update a book by id---*/
+   @PutMapping("/book/{id}")
+   public ResponseEntity<?> update(@PathVariable("id") long id, @RequestBody Book book) {
+      bookService.update(id, book);
+      return ResponseEntity.ok().body("Book has been updated successfully.");
+   }
+
+   /*---Delete a book by id---*/
+   @DeleteMapping("/book/{id}")
+   public ResponseEntity<?> delete(@PathVariable("id") long id) {
+      bookService.delete(id);
+      return ResponseEntity.ok().body("Book has been deleted successfully.");
+   }
+}
+
+RESTApi Methods and its use
+----------------------------
+
+HTTP Method 	CRUD Operation 	Description
+POST  --	Create -- 	Create a new resource ( equivalent to SQL INSERT statement)
+http://localhost:8080/spring-mvc-restfull-crud-example/book
+
+
+GET -- 	Read 	--- Retrieve a resource ( equivalent to SQL SELECT statement)
+http://localhost:8080/spring-mvc-restfull-crud-example/book
+http://localhost:8080/spring-mvc-restfull-crud-example/book/{ID}
+
+
+PUT ---	Update  ---  Update or modify a resource ( equivalent to SQL UPDATE statement)
+http://localhost:8080/spring-mvc-restfull-crud-example/book/{ID}
+
+
+DELETE 	Delete 	Delete a resource ( equivalent to SQL DELETE statement)
+http://localhost:8080/spring-mvc-restfull-crud-example/book/{ID} 
+
+
+Angular (FrontEnd Part)
+------------------------
+
+
+app.module.ts
+--------------
+
+import { BrowserModule } from '@angular/platform-browser';
+import { NgModule } from '@angular/core';
+import { HttpModule } from '@angular/http';
+import { FormsModule } from '@angular/forms';
+import { RouterModule, Routes } from '@angular/router';
+
+
+import { AppComponent } from './app.component';
+import { BookService } from './book/book.service';
+import { BookComponent } from './book/book.component';
+import { AppChildComponent } from './appchild.component';
+import { BookListComponent } from './book/bookList.component';
+import { PageNotFoundComponent } from './others/pageNotFound.component';
+import { HomeComponent } from './book/home.component';
+
+
+const appRoutes: Routes = [
+  { path: 'home', component: HomeComponent },
+  { path: 'books', component: BookListComponent },
+  { path: 'addBook', component: BookComponent },
+  { path: '', redirectTo: '/home', pathMatch: 'full' },
+  { path: '**', component: PageNotFoundComponent }
+];
+
+@NgModule({
+  declarations: [
+    AppComponent, BookComponent, AppChildComponent, BookListComponent, HomeComponent, PageNotFoundComponent
+  ],
+  imports: [
+    BrowserModule, HttpModule, FormsModule,  RouterModule.forRoot(appRoutes)
+  ],
+  providers: [BookService],
+  bootstrap: [AppComponent]
+})
+export class AppModule { }
+
+
+app.component.ts
+-----------------
+import { Component, OnInit } from '@angular/core';
+
+@Component({
+  selector: 'app-root',
+  templateUrl: './app.component.html',
+  styleUrls: ['./app.component.css']
+})
+export class AppComponent{
+}
+
+
+app.component.html
+-------------------
+
+<div style="padding:5px">
+    <ul class="nav nav-tabs">
+        <li routerLinkActive="active">
+            <a routerLink="home">Home</a>
+        </li>
+        <li routerLinkActive="active">
+            <a routerLink="addBook">Add Book</a>
+        </li>
+        <li routerLinkActive="active">
+            <a routerLink="books">List of Books</a>
+        </li>
+    </ul>
+    <br/>
+    <router-outlet></router-outlet>
+</div>
+
+create a sub component called PageNotFoundComponent and write the following code
+--------------------------------------------------------------------------------
+import { Component } from '@angular/core';
+
+@Component({
+    template: `<h1>The page you are looking for does not exist!</h1>`
+})
+export class PageNotFoundComponent{
+
+}
+
+create a sub component called Book and write the following code
+----------------------------------------------------------------
+
+home.component.ts
+------------------
+import { Component } from '@angular/core';
+
+@Component({
+    template: `<h1>This is home page!</h1>`
+})
+export class HomeComponent{
+
+}
+
+bookList.component.ts
+---------------------
+import { Component, OnInit, Output, EventEmitter } from '@angular/core';
+import { BookService } from './book.service';
+import { Book } from './book';
+import { Router } from '@angular/router';
+
+
+@Component({
+    selector: 'book-list',
+    templateUrl: './bookList.component.html',
+    styleUrls: ['./bookList.component.css']
+})
+export class BookListComponent implements OnInit{
+    book = new Book();
+    statusMessage: string;
+    books: Book[];
+    constructor(private _bookService: BookService,
+                private _router: Router){}
+    
+    ngOnInit(): void {
+        console.log("calling ngOnInit()::::");
+        this.getBooks();
+    }
+
+    getBooks(): void{
+        console.log("Inside getBooks():::::")
+        this._bookService.getAllBooks()
+            .subscribe((bookData) => this.books = bookData,
+            (error) =>{
+                console.log(error);
+                this.statusMessage = "Problem with service. Please try again later!";
+            }
+        );
+        console.log("end of getBooks():::::");
+    }
+}
+
+bookList.component.html
+------------------------
+<div class = "container">
+    <table class = "table table-striped table-bordered">
+        <tr style = "background: lightblue;">
+            <th>ID</th>
+            <th>TITLE</th>
+            <th>AUTHOR</th>
+        </tr>
+        <tr *ngFor = "let book of books">
+            <td>{{book.id}}</td>
+            <td>{{book.title}}</td>
+            <td>{{book.author}}</td>
+        </tr>
+        <tr *ngIf = "books && books.length == 0">
+            <td colspan = "3">No records found!</td>
+        </tr>
+    </table>
+</div>
+
+bookList.component.css
+----------------------
+
+td{
+    text-align: center;
+}
+th{
+    text-align: center;
+}
+
+
+Book.ts
+-------
+export class Book{
+    id: string;
+    title: string;
+    author: string;
+    constructor(){
+        
+    }
+}
+
+book.service.ts
+---------------
+
+import { Injectable } from '@angular/core';
+import { Http, Response, Headers, RequestOptions } from '@angular/http';
+import { Observable } from 'rxjs';
+import 'rxjs/add/operator/map';
+import 'rxjs/add/operator/catch';
+import { Book } from './book';
+
+@Injectable()
+export class BookService{
+    
+    constructor(private _httpService: Http){}
+
+    getAllBooks(): Observable<Book[]>{
+        return this._httpService.get("http://localhost:8037/spring-mvc-restfull-crud-example/book")
+                .map((response: Response) => response.json())
+                .catch(this.handleError);
+    }
+
+    getBookById(bookId: string): Observable<Book>{
+        return this._httpService.get("http://localhost:8037/spring-mvc-restfull-crud-example/book/"+bookId)
+                .map((response: Response) => response.json())
+                .catch(this.handleError);
+    }
+
+    addBook(book: Book){
+        let body = JSON.parse(JSON.stringify(book));
+        let headers = new Headers({ 'Content-Type': 'application/json' });
+        let options = new RequestOptions({ headers: headers });
+        if(book.id){    
+            return this._httpService.put("http://localhost:8037/spring-mvc-restfull-crud-example/book/"+book.id, body, options);
+        }else{
+            return this._httpService.post("http://localhost:8037/spring-mvc-restfull-crud-example/book", body, options);
+        }
+    }
+
+    deleteBook(bookId: string){
+        return this._httpService.delete("http://localhost:8037/spring-mvc-restfull-crud-example/book/"+bookId);
+    }
+
+    private handleError(error: Response){
+        return Observable.throw(error);
+    }
+}
+
+book.component.ts
+-----------------
+import {Component, OnInit} from '@angular/core';
+import {Router} from '@angular/router';
+import {BookService} from './book.service';
+import {Book} from './book';
+
+@Component({
+    selector: 'app-book',
+    templateUrl: './book.component.html',
+    styleUrls: ['./book.component.css']
+})
+export class BookComponent implements OnInit{
+
+    books: Book[];
+    statusMessage: string;
+    book = new Book();
+    
+    constructor(private _bookService: BookService,
+                private _router: Router){}
+
+    ngOnInit(): void {
+        this.getBooks();
+    }
+
+    getBooks(): void{
+        this._bookService.getAllBooks()
+            .subscribe((bookData) => this.books = bookData,
+            (error) =>{
+                console.log(error);
+                this.statusMessage = "Problem with service. Please try again later!";
+            }
+        );
+        
+    }
+
+    addBook(): void{
+        this._bookService.addBook(this.book)
+            .subscribe((response) => {console.log(response); this.getBooks();this.reset();},
+            (error) =>{
+                console.log(error);
+                this.statusMessage = "Problem with service. Please try again later!";
+            }
+        );   
+    }
+
+    private reset(){
+        this.book.id = null;
+        this.book.title = null;
+        this.book.author = null;
+    }
+
+    deleteBook(bookId: string){
+        console.log("Inside the deleteBook()::::Book id::::"+bookId);
+        this._bookService.deleteBook(bookId)
+            .subscribe((response) => {console.log(response); this.getBooks();},
+            (error) =>{
+                console.log(error);
+                this.statusMessage = "Problem with service. Please try again later!";
+            });
+            this.reset();
+            console.log("end of deleteBook():::::::");
+    }
+
+    getBook(bookId: string){
+        this._bookService.getBookById(bookId)
+            .subscribe((bookData) => {this.book = bookData; this.getBooks(); }),
+            (error) => {
+                console.log(error);
+                this.statusMessage = "Problem with service. Please try again later!";
+            }
+        this.reset();    
+    }
+}
+
+book.component.html
+--------------------
+
+<div class="container">
+    <div (bookObj) = 'random($event)'>
+        <form class="form-horizontal">
+            <input type = "hidden" [(ngModel)] = "book.id" name = "id" /> 
+            <div class="form-group">
+                <label class="control-label col-sm-2">Book Title</label>
+                <div class="col-sm-8">
+                    <input type = "text" [(ngModel)] = "book.title" name = "title" class="form-control" />
+                </div>    
+            </div>
+            <div class="form-group">
+                <label class="control-label col-sm-2">Book Author</label>
+                <div class="col-sm-8">
+                        <input type = "text" [(ngModel)] = "book.author" name = "author" class="form-control" />
+                </div>    
+            </div>
+            <div class="form-group">
+                <div class="col-sm-offset-2 col-sm-8">
+                    <button (click) = "addBook()" class = "btn btn-primary">Add Book</button>
+                </div>
+            </div>
+        </form>
+    </div>
+    <div>
+        <table class = "table table-striped table-bordered">
+            <tr style = "background: lightblue;">
+                <th>ID</th>
+                <th>TITLE</th>
+                <th>AUTHOR</th>
+                <th>ACTIONS</th>
+            </tr>
+            <tr *ngFor = "let book of books">
+                <td>{{book.id}}</td>
+                <td>{{book.title}}</td>
+                <td>{{book.author}}</td>
+                <td>
+                    <button (click) = "getBook(book.id)" class="btn btn-default btn-sm"><span class="glyphicon glyphicon-edit"></span></button>      
+                    &nbsp;|&nbsp;
+                    <button (click) = "deleteBook(book.id)" class="btn btn-default btn-sm"><span class="glyphicon glyphicon-trash"></span></button>
+                </td>
+            </tr>
+            <tr *ngIf = "books && books.length == 0">
+                <td colspan = "4">No records found!</td>
+            </tr>
+        </table>
+    </div>
+</div>
+
+
+book.component.css
+------------------
+td{
+    text-align: center;
+}
+th{
+    text-align: center;
+}
+
+
+

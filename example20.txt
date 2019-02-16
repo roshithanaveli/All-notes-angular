@@ -1,0 +1,22 @@
+<html>
+<body>
+
+<div ng-app="myApp" ng-controller="myCtrl" >
+
+<ol>
+	<li ng-repeat="x in names"> {{x}} </li>
+
+</ol>
+</div>
+
+<script src="https://ajax.googleapis.com/ajax/libs/angularjs/1.6.9/angular.min.js">
+	
+	var m1 = angular.module("myApp",[]);
+	m1.controller('myCtrl',functin($scope){
+
+		names=["praveen","kumar","Kiran","Sandeep"];
+	}
+
+</script>
+</body>
+</html>

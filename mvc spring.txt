@@ -1,0 +1,75 @@
+1. create a dynamic web project.
+
+2. configure the deployment descriptor (web.xml) with DispatcherServlet
+   properties.
+
+	<web-apps>
+	<servlet>
+		<servlet-name>mvc-dispatcher</servlet-name>
+		<servlet-class>org.springframework.web.servlet.DispatcherServlet</servlet-class>
+	</servlet>
+	<sevlet-mapping>
+		<servlet-name>mvc-dispatcher</servlet-name>
+		<url-pattern>/</url-pattern>
+	</sevlet-mapping>
+	</web-apps>
+
+3. configure the spring configuration file: mvc-dispatcher-servlet.xml
+
+   <?xml version="1.0" encoding="UTF-8"?>  
+<beans xmlns="http://www.springframework.org/schema/beans"  
+    xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"   
+    xmlns:context="http://www.springframework.org/schema/context"  
+    xmlns:mvc="http://www.springframework.org/schema/mvc"  
+    xsi:schemaLocation="  
+        http://www.springframework.org/schema/beans  
+        http://www.springframework.org/schema/beans/spring-beans.xsd  
+        http://www.springframework.org/schema/context  
+        http://www.springframework.org/schema/context/spring-context.xsd  
+        http://www.springframework.org/schema/mvc  
+        http://www.springframework.org/schema/mvc/spring-mvc.xsd">  
+  
+    <!-- Provide support for component scanning -->  
+      
+  
+    <!--Provide support for conversion, formatting and validation -->  
+    <mvc:annotation-driven/>  
+  
+</beans> 
+
+4. create a controller class in src package
+
+import org.springframework.stereotype.Controller;  
+import org.springframework.web.bind.annotation.RequestMapping;  
+@Controller  
+public class HelloController {  
+@RequestMapping("/")  
+    public String display()  
+    {  
+        return "index";  
+    }     
+}  
+
+
+5. provide the package name of above controller in ioc config file
+   mvc-dispatcher-servlet.xml
+	as 
+	
+<context:component-scan base-package="com.examples.spring.mvc.controller"/>
+
+6. write the view logic (index.jsp)
+
+ <html>  
+<body>  
+<p>Welcome to Spring MVC</p>  
+</body>  
+</html> 
+
+6. save the project deploy in the container
+
+7. run the application from the browser
+  http://localhost:8080/mvcnewapplication/
+
+
+
+
